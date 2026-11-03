@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formulário Runners · BotCity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@300..800&family=Inter:wght@200..700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #ffffff; }
+  * { box-sizing: border-box; }
+  body { font-family: Inter, sans-serif; color: #000014; }
+  a { color: #003cf0; } a:hover { color: #00178c; }
+  textarea::placeholder, input::placeholder { color: #8a91a1; }
+  input[type=range] { accent-color: #003cf0; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  button { font: inherit; }
+
+  .mono { font-family: 'Google Sans Code', monospace; }
+  .app { position: relative; height: 100vh; height: 100dvh; min-height: 560px; overflow: hidden; display: flex; flex-direction: column; }
+  .bar { height: 4px; background: #f2f7ff; flex: none; }
+  .bar > div { height: 100%; background: #003cf0; width: 0; transition: width .5s cubic-bezier(.2,.7,.2,1); }
+  header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px clamp(20px, 5vw, 56px); flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 20px; }
+  .brand svg { height: 22px; width: auto; display: block; }
+  .brand span { font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #4a4f5c; padding-left: 20px; border-left: 1px solid #c7ccd6; }
+  .hdr-right { display: flex; align-items: center; gap: 20px; }
+  .saved { font-size: 12px; color: #8a91a1; }
+  .counter { font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #4a4f5c; }
+  .pause-btn { padding: 8px 14px; border-radius: 6px; border: 1px solid #b3d2ff; background: #dbeaff; color: #00178c; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+  .pause-btn:hover { border-color: #003cf0; color: #003cf0; }
+
+  main { position: relative; flex: 1; min-height: 0; }
+  .slide { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 clamp(20px, 5vw, 56px) 96px; overflow-y: auto; transition: transform .55s cubic-bezier(.2,.7,.2,1), opacity .4s ease-out, visibility .55s; }
+  .slide.top { align-items: flex-start; }
+  .inner { width: 100%; max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; padding: 24px 0; }
+  .head { display: flex; flex-direction: column; gap: 12px; }
+  .eyebrow { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #003cf0; }
+  .eyebrow .opt { font-size: 11px; font-weight: 500; color: #8a91a1; }
+  h1 { margin: 0; font-size: clamp(26px, 3.6vw, 40px); font-weight: 300; line-height: 1.12; letter-spacing: -0.02em; text-wrap: pretty; }
+  h1 strong { font-weight: 600; }
+  .help { margin: 0; font-size: 16px; line-height: 1.6; color: #4a4f5c; max-width: 640px; text-wrap: pretty; }
+
+  .txt { width: 100%; border: none; border-bottom: 2px solid #b3d2ff; background: transparent; padding: 12px 0; font-family: Inter, sans-serif; font-size: clamp(20px, 2.6vw, 28px); font-weight: 300; color: #000014; outline: none; border-radius: 0; }
+  textarea.txt { font-size: clamp(18px, 2.2vw, 24px); line-height: 1.5; resize: none; }
+  .txt:focus { border-bottom-color: #003cf0; }
+
+  .opts { display: flex; flex-direction: column; gap: 10px; max-width: 520px; }
+  .opt-btn { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 12px 16px; border-radius: 6px; border: 1px solid #c7ccd6; background: #ffffff; font-family: Inter, sans-serif; font-size: 17px; color: #000014; cursor: pointer; transition: background .15s ease-out, border-color .15s ease-out; }
+  .opt-btn:hover { border-color: #003cf0; }
+  .opt-btn .k { flex: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Google Sans Code', monospace; font-size: 12px; font-weight: 600; border: 1px solid #b3d2ff; background: #ffffff; color: #003cf0; }
+  .opt-btn.multi .k { border-radius: 4px; }
+  .opt-btn .l { flex: 1; }
+  .opt-btn .c { flex: none; color: #003cf0; font-size: 16px; opacity: 0; }
+  .opt-btn.sel { background: #f2f7ff; border-color: #003cf0; }
+  .opt-btn.sel .k { background: #003cf0; color: #ffffff; border-color: #003cf0; }
+  .opt-btn.sel .c { opacity: 1; }
+
+  .num-wrap { display: flex; flex-direction: column; gap: 16px; max-width: 560px; }
+  .num-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .num { min-width: 1.2ch; border: none; border-bottom: 2px solid #b3d2ff; background: transparent; padding: 0; font-family: Inter, sans-serif; font-size: clamp(56px, 8vw, 88px); font-weight: 200; letter-spacing: -0.03em; line-height: 1.05; color: #003cf0; outline: none; border-radius: 0; }
+  .num:focus { border-bottom-color: #003cf0; }
+  .unit { font-size: 13px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #4a4f5c; }
+  .range { width: 100%; height: 28px; margin: 0; cursor: pointer; }
+  .range-lbl { display: flex; justify-content: space-between; font-size: 12px; color: #8a91a1; }
+
+  .example { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 6px; background: #f2f7ff; max-width: 640px; }
+  .example .t { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #00178c; }
+  .example .v { font-size: 15px; line-height: 1.5; }
+
+  .actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .ok { display: flex; align-items: center; gap: 10px; padding: 12px 22px; border-radius: 6px; border: none; background: #003cf0; color: #ffffff; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: background .15s ease-out; }
+  .ok:disabled { background: #eceef2; color: #8a91a1; cursor: not-allowed; }
+  .hint { font-size: 12px; color: #8a91a1; }
+
+  .sum { display: flex; flex-direction: column; border-top: 1px solid #eceef2; }
+  .sum-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid #eceef2; }
+  .sum-row .n { font-size: 12px; font-weight: 600; color: #003cf0; }
+  .sum-row .q { font-size: 14px; color: #4a4f5c; display: block; }
+  .sum-row .a { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; white-space: pre-wrap; display: block; margin-top: 4px; }
+  .link-btn { border: none; background: transparent; padding: 4px 0; font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #003cf0; cursor: pointer; }
+  .link-btn:hover { color: #00178c; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-outline { display: flex; align-items: center; gap: 10px; padding: 12px 22px; border-radius: 6px; border: 1px solid #003cf0; background: #ffffff; color: #003cf0; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+  .btn-outline.filled { background: #003cf0; color: #ffffff; }
+  .btn-outline:disabled { cursor: default; }
+  .btn-grey { padding: 12px 22px; border-radius: 6px; border: 1px solid #c7ccd6; background: #ffffff; color: #4a4f5c; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+  .btn-grey:hover { border-color: #000014; color: #000014; }
+  .err { font-size: 14px; color: #b00020; }
+
+  .paused { background: #ffffff; transition: opacity .35s ease-out, visibility .35s; }
+  .link-box { display: flex; align-items: stretch; gap: 8px; max-width: 640px; flex-wrap: wrap; }
+  .link-box div { flex: 1; min-width: 240px; padding: 12px 16px; border-radius: 6px; background: #f2f7ff; font-size: 13px; color: #00178c; overflow-wrap: anywhere; }
+
+  .toast { position: absolute; left: 50%; bottom: 32px; transform: translateX(-50%); padding: 10px 16px; border-radius: 6px; background: #000014; color: #ffffff; font-size: 12px; letter-spacing: .04em; opacity: 0; transition: opacity .3s ease-out; pointer-events: none; white-space: nowrap; }
+  .nav { position: absolute; right: clamp(20px, 5vw, 56px); bottom: 24px; display: flex; gap: 8px; }
+  .nav button { width: 44px; height: 44px; border-radius: 6px; border: 1px solid #c7ccd6; background: #ffffff; color: #000014; font-size: 18px; cursor: pointer; }
+  .nav button:hover:not(:disabled) { border-color: #003cf0; color: #003cf0; }
+  .nav button:disabled { opacity: .4; cursor: default; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar"><div id="progress"></div></div>
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 537.34 127.73" fill="#000014" role="img" aria-label="BotCity"><path d="m110.2,22.02c0-12.16-9.87-22.020-22.04-22.020H22.04C9.87,0,0,9.86,0,22.02v44.04c0,12.16,9.87,22.02,22.04,22.02h66.12c12.17,0,22.04-9.86,22.04-22.020s-9.87-22.020-22.04-22.020c12.17,0,22.04-9.86,22.04-22.020Zm-30.86,48.45H22.04v-17.62h57.3c4.870,0,8.82,3.940,8.82,8.81s-3.95,8.81-8.82,8.81Zm0-35.24H22.04v-17.62h57.3c4.87,0,8.82,3.94,8.82,8.81s-3.95,8.81-8.82,8.81Zm101.38-17.62h-39.67c-12.17,0-22.04,9.86-22.04,22.02v26.43c0,12.16,9.87,22.02,22.04,22.02h39.67c12.17,0,22.04-9.86,22.04-22.02v-26.43c0-12.16-9.87-22.02-22.04-22.02Zm0,22.02v30.83h-39.67v-35.24h39.67v4.4ZM427.14,0c-10.66,0-19.56,7.57-21.6,17.62h-9.26v17.62h8.82v30.83c0,12.16,9.87,22.02,22.04,22.02h17.63v-17.62h-17.63v-35.24h17.63v-17.62h-17.63V0Zm-60.83,17.62h21.6V0c-10.66,0-19.56,7.57-21.6,17.62Zm148.99,0v52.85h-39.67V17.62c-12.17,0-22.04,9.86-22.04,22.02v26.43c0,12.16,9.87,22.02,22.04,22.02h39.67v22.02h-39.67c-10.66,0-19.56,7.57-21.6,17.62h61.27c12.17,0,22.04-9.86,22.04-22.02V39.64c0-12.16-9.87-22.02-22.04-22.02ZM242.43,0c-10.66,0-19.56,7.57-21.6,17.62h-9.26v17.62h8.82v30.83c0,12.16,9.87,22.02,22.04,22.02h17.63v-17.62h-17.63v-35.24h17.63v-17.62h-17.630V0Zm123.44,88.09h22.04V26.43h-22.04v61.66Zm-74.95-66.07v-4.4h65.69c-2.04-10.05-10.94-17.62-21.6-17.62h-44.1c-12.17,0-22.04,9.86-22.04,22.02v44.04c0,12.16,9.87,22.02,22.04,22.02h44.1c10.66,0,19.56-7.57,21.6-17.62h-65.69V22.02Z"/></svg>
+      <span class="mono">Formulário Runners</span>
+    </div>
+    <div class="hdr-right">
+      <span class="saved mono" id="saved"></span>
+      <span class="counter mono" id="counter"></span>
+      <button class="pause-btn mono" id="pauseBtn">Continuar depois</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="slide top" id="endSlide">
+      <div class="inner" style="gap:32px;padding:32px 0;">
+        <div class="head">
+          <div class="eyebrow mono" id="endEyebrow">Resumo</div>
+          <h1 style="font-size:clamp(28px,4vw,44px);line-height:1.1;"><span id="endTitle">Revise suas respostas</span> <strong id="endBold">antes de enviar.</strong></h1>
+          <p class="help" id="endSub"></p>
+        </div>
+        <div class="sum" id="summary"></div>
+        <div class="err" id="sendErr" hidden>Não foi possível enviar. Verifique sua conexão e tente novamente.</div>
+        <div class="btns">
+          <button class="btn-outline mono" id="submitBtn">→ Enviar respostas</button>
+          <button class="btn-grey mono" id="restartBtn">Recomeçar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide paused" id="pausedSlide" style="opacity:0;visibility:hidden;">
+      <div class="inner">
+        <div class="head">
+          <div class="eyebrow mono">Progresso salvo</div>
+          <h1 style="font-size:clamp(28px,4vw,44px);line-height:1.1;">Você pode parar agora e <strong>continuar depois.</strong></h1>
+          <p class="help" style="max-width:600px;">Suas respostas até aqui (<span id="pausedCount"></span>) estão salvas neste navegador. Ao voltar, o formulário abre na pergunta em que você parou. Guarde o link abaixo para retomar.</p>
+        </div>
+        <div class="link-box">
+          <div class="mono" id="resumeLink"></div>
+          <button class="btn-outline mono" id="copyBtn" style="padding:12px 18px;font-size:12px;">Copiar link</button>
+        </div>
+        <div><button class="ok mono" id="resumeBtn">→ Voltar ao formulário</button></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast mono" id="toast">Retomando de onde você parou</div>
+
+  <div class="nav" id="nav">
+    <button id="prevBtn" aria-label="Pergunta anterior">↑</button>
+    <button id="nextBtn" aria-label="Próxima pergunta">↓</button>
+  </div>
+</div>
+
+<script>
+/* ===== Configuração ===== */
+const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwHOhoKzcXlNinXdwQXhWSV6sAeT3zQ8d4XavBsEwG1nCbFRKLdJhsAid9QrR5BgF7p_g/exec';
+const AUTO_ADVANCE = true;           // avança ao escolher (escolha única)
+const DIRECTION = 'vertical';        // 'vertical' ou 'horizontal'
+
+/* ===== Perguntas ===== */
+const NAO_RPA = 'Não, scripts agendados';
+const NAO_DEF = 'Ainda não definido';
+const QUESTIONS = [
+  { id: 'empresa', group: 'Identificação', type: 'text', label: 'Qual é o nome da empresa?', help: 'Razão social ou nome usado no projeto.', example: 'Cooperativa Exemplo' },
+  { id: 'responsavel', group: 'Identificação', type: 'text', label: 'Quem é o responsável pelo preenchimento?', help: 'Quem conhece a operação das automações e pode tirar dúvidas depois.', example: 'Maria Souza' },
+  { id: 'cargo', group: 'Identificação', type: 'text', label: 'Qual é o seu cargo e área?', help: 'Ajuda a direcionar perguntas técnicas ou de negócio.', example: 'Coordenadora de Automação, TI' },
+  { id: 'email', group: 'Identificação', type: 'email', label: 'Qual é o seu e-mail?', help: 'Contato para retorno da estimativa.', example: 'maria.souza@exemplo.com.br' },
+  { id: 'q1_producao', group: '01', type: 'number', max: 300, unit: 'em produção', label: 'Quantas automações estão ativas hoje?', help: 'Conte apenas as que rodam em produção hoje.' },
+  { id: 'q1_desenv', group: '01', type: 'number', max: 100, unit: 'previstas', label: 'E quantas estão em desenvolvimento ou previstas para os próximos meses?', help: 'Informe à parte das que já estão em produção.' },
+  { id: 'q2_maquinas', group: '02', type: 'number', max: 200, unit: 'máquinas', label: 'Quantas máquinas (VMs ou físicas) executam essas automações atualmente?', help: 'Some todas as máquinas usadas só para executar automações. Não inclua máquinas de desenvolvimento ou testes.' },
+  { id: 'q3_ferramentas', group: '03', type: 'multi', exclusive: [NAO_RPA], label: 'Já existe alguma ferramenta de RPA em uso que será migrada?', help: 'Selecione todas as ferramentas em uso. Se as automações forem scripts Python agendados, sem ferramenta, escolha a última opção.', options: ['UiPath', 'Automation Anywhere', 'Blue Prism', 'Power Automate Desktop', 'Outra ferramenta', NAO_RPA] },
+  { id: 'q3_licencas', group: '03', type: 'textarea', showIf: a => (a.q3_ferramentas || []).some(x => x !== NAO_RPA), label: 'Quantos executores ou licenças de cada ferramenta estão contratados?', help: 'Informe a ferramenta e a quantidade contratada de cada tipo de licença de execução.', example: 'UiPath com 25 robôs Unattended e Power Automate Desktop com 5 licenças de fluxo desassistido.' },
+  { id: 'q4_simultaneos', group: '04', type: 'number', max: 100, unit: 'execuções simultâneas', label: 'No momento de maior demanda, quantos processos precisam rodar ao mesmo tempo?', help: 'Pense no horário mais cheio do dia e some tudo o que roda junto, incluindo automações diferentes e cópias da mesma automação.' },
+  { id: 'q4_pico', group: '04', type: 'text', optional: true, label: 'Em que horário acontece esse pico?', help: 'Se souber o horário do pico, informe.', example: 'Entre 9h e 12h.' },
+  { id: 'q5_instancias', group: '05', type: 'single', options: ['Sim', 'Não'], label: 'Alguma automação precisa rodar em várias instâncias simultâneas por causa do volume?', help: 'Considere só as automações em que a mesma rotina roda em várias máquinas ao mesmo tempo, cada cópia processando parte dos itens.' },
+  { id: 'q5_detalhe', group: '05', type: 'textarea', showIf: a => a.q5_instancias === 'Sim', label: 'Quais automações, quantas instâncias de cada e quando?', help: 'Para cada uma, informe quantas cópias rodam ao mesmo tempo e em que período.', example: 'Contratação de crédito: 8 instâncias durante o horário comercial. Conciliação bancária: 3 instâncias nos 3 últimos dias do mês.' },
+  { id: 'q6_formato', group: '06', type: 'single', options: ['Horário comercial', '24 horas', 'Misto'], label: 'As automações rodam majoritariamente em horário comercial, 24h ou em formato misto?' },
+  { id: 'q6_restritas', group: '06', type: 'number', max: 300, unit: 'restritas', showIf: a => a.q6_formato && a.q6_formato !== '24 horas', label: 'Quantas são obrigatoriamente restritas ao horário comercial?', help: '“Restrita” significa que não pode rodar fora do horário, por exemplo porque o sistema ou portal fica indisponível. Automações que rodam de dia só por costume não são restritas.' },
+  { id: 'q6_janela', group: '06', type: 'text', showIf: a => a.q6_formato && a.q6_formato !== '24 horas', label: 'Qual é a janela exata desse horário?', help: 'Informe início e fim do período em que os sistemas ficam disponíveis.', example: '8h às 18h' },
+  { id: 'q7_tela', group: '07', type: 'number', max: 300, unit: 'em tela', label: 'Aproximadamente quantos processos são exclusivamente em tela?', help: '“Em tela” exige uma sessão gráfica ativa, com mouse, teclado ou leitura de imagem. Uma estimativa aproximada já ajuda.' },
+  { id: 'q7_background', group: '07', type: 'number', max: 300, unit: 'em background', label: 'E quantos podem rodar em background?', help: '“Background” roda sem interface visível, como APIs, arquivos ou navegador headless.' },
+  { id: 'q8_ambiente', group: '08', type: 'multi', exclusive: [NAO_DEF], options: ['VMs', 'Docker', 'Kubernetes', NAO_DEF], label: 'Onde os runners serão executados?', help: 'Selecione o ambiente previsto.' },
+  { id: 'q8_config', group: '08', type: 'textarea', optional: true, label: 'Qual é a configuração dessas máquinas?', help: 'Se souber, informe sistema, local e recursos. Isso indica se é possível rodar mais de um runner por máquina.', example: 'VMs Windows on-premise (VMware), 4 vCPU e 8 GB de RAM cada.' }
+];
+
+/* Nomes das colunas na planilha (iguais aos da versão anterior) */
+const ID_LABELS = { empresa: 'Empresa', responsavel: 'Responsável pelo preenchimento', cargo: 'Cargo / área', email: 'E-mail' };
+const COL_LABEL = {};
+QUESTIONS.forEach(q => {
+  if (ID_LABELS[q.id]) { COL_LABEL[q.id] = ID_LABELS[q.id]; return; }
+  const same = QUESTIONS.filter(x => x.group === q.group);
+  const n = same.length > 1 ? q.group + '.' + (same.indexOf(q) + 1) : q.group;
+  COL_LABEL[q.id] = n + ' – ' + q.label;
+});
+
+const KEYS = 'ABCDEFGHIJ';
+const STORE = 'botcity-formulario-runners';
+const pad = n => String(n).padStart(2, '0');
+const hhmm = t => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const HORIZ = DIRECTION === 'horizontal';
+
+/* ===== Estado ===== */
+let S = { curId: QUESTIONS[0].id, atEnd: false, answers: {}, submitted: false, paused: false, savedAt: null, sid: uid(), copied: false };
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (d && d.answers && Object.keys(d.answers).length) {
+      Object.assign(S, { answers: d.answers, curId: d.curId || S.curId, atEnd: !!d.atEnd, sid: d.sid || S.sid, savedAt: d.updatedAt, submitted: d.status === 'enviado' });
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function saveLocal() {
+  const rec = { sid: S.sid, status: S.submitted ? 'enviado' : 'parcial', curId: S.curId, atEnd: S.atEnd, updatedAt: Date.now(), answers: S.answers };
+  try { localStorage.setItem(STORE, JSON.stringify(rec)); } catch (e) {}
+}
+
+function payload() {
+  const cols = {};
+  QUESTIONS.forEach(q => {
+    const v = S.answers[q.id];
+    cols[COL_LABEL[q.id]] = v === undefined ? '' : (Array.isArray(v) ? v.join(', ') : v);
+  });
+  return JSON.stringify({ sessionId: S.sid, status: S.submitted ? 'enviado' : 'parcial', answers: cols });
+}
+
+/* Envia para o Apps Script. 'no-cors' + text/plain evita preflight;
+   o Apps Script recebe normalmente em doPost(e) via e.postData.contents. */
+function send() {
+  if (!WEBHOOK_URL) return Promise.resolve();
+  return fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload() });
+}
+
+let sendTimer;
+function answersChanged() {
+  S.savedAt = Date.now();
+  saveLocal();
+  clearTimeout(sendTimer);
+  sendTimer = setTimeout(() => send().catch(e => console.warn('Falha ao salvar parcial', e)), 800);
+  updateChrome();
+}
+
+/* ===== Lógica ===== */
+const visible = () => QUESTIONS.filter(q => !q.showIf || q.showIf(S.answers));
+function curIndex() {
+  const vis = visible();
+  if (S.atEnd) return vis.length;
+  const k = vis.findIndex(q => q.id === S.curId);
+  return k < 0 ? 0 : k;
+}
+function isAnswered(q) {
+  const a = S.answers[q.id];
+  if (q.type === 'multi') return Array.isArray(a) && a.length > 0;
+  if (q.type === 'number') return typeof a === 'number' && !isNaN(a);
+  if (q.type === 'single') return a !== undefined;
+  if (q.type === 'email') return typeof a === 'string' && /^\S+@\S+\.\S+$/.test(a.trim());
+  return typeof a === 'string' && a.trim().length > 0;
+}
+const canGo = q => q.optional || isAnswered(q);
+
+function goIndex(n) {
+  const vis = visible();
+  n = Math.max(0, Math.min(vis.length, n));
+  const cur = curIndex();
+  if (n > cur) for (let k = cur; k < n; k++) if (!canGo(vis[k])) return;
+  if (n === vis.length) S.atEnd = true;
+  else { S.atEnd = false; S.curId = vis[n].id; }
+  saveLocal();
+  render();
+  focusCurrent();
+}
+const next = () => goIndex(curIndex() + 1);
+const prev = () => goIndex(curIndex() - 1);
+
+function setAnswer(id, v) {
+  if (v === undefined) delete S.answers[id]; else S.answers[id] = v;
+  S.answers = { ...S.answers };
+  S.submitted = false;
+  answersChanged();
+}
+
+let autoTimer;
+function pick(q, opt) {
+  if (q.type === 'single') {
+    setAnswer(q.id, opt);
+    renderOptions(q);
+    if (AUTO_ADVANCE) {
+      clearTimeout(autoTimer);
+      autoTimer = setTimeout(() => { if (S.curId === q.id && !S.atEnd) next(); }, 380);
+    }
+  } else {
+    const cur = S.answers[q.id] || [];
+    const ex = q.exclusive || [];
+    let v;
+    if (cur.includes(opt)) v = cur.filter(x => x !== opt);
+    else if (ex.includes(opt)) v = [opt];
+    else v = [...cur.filter(x => !ex.includes(x)), opt];
+    setAnswer(q.id, v.length ? v : undefined);
+    renderOptions(q);
+  }
+  render();
+}
+
+function answerText(q) {
+  const a = S.answers[q.id];
+  if (a === undefined || a === '' || (Array.isArray(a) && !a.length)) return q.optional ? 'Não informado' : '—';
+  if (Array.isArray(a)) return a.join(', ');
+  if (q.type === 'number') return a + ' ' + q.unit;
+  return a;
+}
+const resumeLink = () => location.href.split('?')[0].split('#')[0] + '?retomar=' + S.sid;
+
+function focusCurrent() {
+  setTimeout(() => {
+    const el = document.querySelector('[data-q-input="' + S.curId + '"]');
+    if (el && !S.atEnd && !S.paused) el.focus({ preventScroll: true });
+  }, 450);
+}
+
+/* ===== Construção das telas (uma vez) ===== */
+const els = {};
+function build() {
+  const main = $('main');
+  const endSlide = $('endSlide');
+  QUESTIONS.forEach(q => {
+    const sec = document.createElement('section');
+    sec.className = 'slide';
+    let input = '';
+    if (q.type === 'text' || q.type === 'email') {
+      input = `<input class="txt" data-q-input="${q.id}" type="${q.type === 'email' ? 'email' : 'text'}" placeholder="${q.type === 'email' ? 'nome@empresa.com.br' : 'Digite sua resposta'}" autocomplete="off">`;
+    } else if (q.type === 'textarea') {
+      input = `<textarea class="txt" data-q-input="${q.id}" rows="3" placeholder="Digite sua resposta"></textarea>`;
+    } else if (q.type === 'number') {
+      input = `<div class="num-wrap">
+        <div class="num-row"><input class="num" data-q-input="${q.id}" type="number" min="0" inputmode="numeric" placeholder="0"><span class="unit mono">${esc(q.unit)}</span></div>
+        <input class="range" type="range" min="0" max="${q.max}" step="1" value="0">
+        <div class="range-lbl mono"><span>0</span><span>${q.max}+</span></div>
+      </div>`;
+    } else {
+      input = `<div class="opts">${q.options.map((o, k) => `<button class="opt-btn ${q.type === 'multi' ? 'multi' : ''}" data-opt="${k}"><span class="k">${KEYS[k]}</span><span class="l">${esc(o)}</span><span class="c">✓</span></button>`).join('')}</div>`;
+    }
+    const example = q.type !== 'number' && q.example ? `<div class="example"><span class="t mono">Exemplo de resposta</span><span class="v">${esc(q.example)}</span></div>` : '';
+    sec.innerHTML = `<div class="inner">
+      <div class="head">
+        <div class="eyebrow mono"><span>${q.group === 'Identificação' ? 'Identificação' : 'Pergunta ' + q.group} →</span>${q.optional ? '<span class="opt">Opcional</span>' : ''}</div>
+        <h1>${esc(q.label)}</h1>
+        ${q.help ? `<p class="help">${esc(q.help)}</p>` : ''}
+      </div>
+      ${input}
+      ${example}
+      <div class="actions"><button class="ok mono"></button><span class="hint mono"></span></div>
+    </div>`;
+    main.insertBefore(sec, endSlide);
+
+    const e = { sec, ok: sec.querySelector('.ok'), hint: sec.querySelector('.hint'), input: sec.querySelector('[data-q-input]'), range: sec.querySelector('.range'), opts: [...sec.querySelectorAll('.opt-btn')] };
+    els[q.id] = e;
+
+    const onEnter = ev => { if (ev.key === 'Enter' && !(q.type === 'textarea' && ev.shiftKey)) { ev.preventDefault(); next(); } };
+    if (q.type === 'number') {
+      const setNum = v => {
+        const n = v === '' ? undefined : Math.max(0, Math.round(Number(v)));
+        setAnswer(q.id, n);
+        syncNumber(q);
+        updateQuestion(q);
+      };
+      e.input.addEventListener('input', () => setNum(e.input.value));
+      e.range.addEventListener('input', () => setNum(e.range.value));
+      e.input.addEventListener('keydown', onEnter);
+    } else if (e.input) {
+      e.input.addEventListener('input', () => { setAnswer(q.id, e.input.value); updateQuestion(q); });
+      e.input.addEventListener('keydown', onEnter);
+    }
+    e.opts.forEach((b, k) => b.addEventListener('click', () => pick(q, q.options[k])));
+    e.ok.addEventListener('click', next);
+  });
+  els._end = endSlide;
+}
+
+function syncNumber(q) {
+  const e = els[q.id], a = S.answers[q.id];
+  const str = typeof a === 'number' ? String(a) : '';
+  if (document.activeElement !== e.input || e.input.value !== str) { if (e.input.value !== str && !(e.input.value === '' && str === '')) e.input.value = str; }
+  e.input.style.width = Math.max(1.2, str.length * 0.62 + 0.4) + 'em';
+  e.range.value = typeof a === 'number' ? Math.min(a, q.max) : 0;
+}
+
+function fillInputs() {
+  QUESTIONS.forEach(q => {
+    const e = els[q.id], a = S.answers[q.id];
+    if (q.type === 'number') syncNumber(q);
+    else if (e.input) e.input.value = typeof a === 'string' ? a : '';
+    if (q.options) renderOptions(q);
+  });
+}
+
+function renderOptions(q) {
+  const a = S.answers[q.id];
+  els[q.id].opts.forEach((b, k) => {
+    const o = q.options[k];
+    const sel = q.type === 'multi' ? (a || []).includes(o) : a === o;
+    b.classList.toggle('sel', sel);
+  });
+}
+
+function updateQuestion(q) {
+  const e = els[q.id];
+  const vis = visible();
+  const answered = isAnswered(q), ok = canGo(q);
+  const isLast = vis.indexOf(q) === vis.length - 1;
+  e.ok.disabled = !ok;
+  e.ok.textContent = (!answered && q.optional ? 'Pular' : isLast ? 'Revisar' : 'OK') + ' →';
+  let hint;
+  if (answered) hint = q.type === 'textarea' ? 'ou Enter ↵ · Shift + Enter quebra linha' : q.options ? 'ou Enter ↵ · teclas ' + KEYS.slice(0, q.options.length).split('').join(' ') : 'ou pressione Enter ↵';
+  else if (q.optional) hint = 'Pode pular se não souber';
+  else if (q.type === 'number') hint = 'Digite ou arraste para definir um valor';
+  else if (q.type === 'email') hint = 'Informe um e-mail válido';
+  else if (q.type === 'multi') hint = 'Selecione ao menos uma opção';
+  else if (q.options) hint = 'Selecione uma opção';
+  else hint = 'Responda para continuar';
+  e.hint.textContent = hint;
+}
+
+function slideStyle(el, off) {
+  const d = off === 0 ? 0 : (off > 0 ? 1 : -1) * 64;
+  const hidden = off !== 0 || S.paused;
+  el.style.transform = HORIZ ? `translateX(${d}px)` : `translateY(${d}px)`;
+  el.style.opacity = hidden ? 0 : 1;
+  el.style.visibility = hidden ? 'hidden' : 'visible';
+}
+
+/* Cabeçalho, barra de progresso e navegação */
+function updateChrome() {
+  const vis = visible(), total = vis.length, ci = curIndex();
+  const atSummary = ci >= total;
+  const answered = vis.filter(isAnswered).length;
+  $('progress').style.width = (S.atEnd ? 100 : answered / total * 100) + '%';
+  $('counter').textContent = atSummary ? 'Resumo' : 'Etapa ' + pad(ci + 1) + ' / ' + pad(total);
+  $('saved').textContent = S.savedAt ? 'Salvo às ' + hhmm(S.savedAt) : '';
+  $('pauseBtn').hidden = S.paused || S.submitted;
+  $('nav').style.visibility = S.paused ? 'hidden' : 'visible';
+  const cur = vis[ci];
+  const curOk = cur ? canGo(cur) : false;
+  $('prevBtn').disabled = ci === 0;
+  $('nextBtn').disabled = atSummary || !curOk;
+  $('prevBtn').textContent = HORIZ ? '←' : '↑';
+  $('nextBtn').textContent = HORIZ ? '→' : '↓';
+}
+
+function renderEnd() {
+  const vis = visible();
+  $('endEyebrow').textContent = S.submitted ? 'Enviado' : 'Resumo';
+  $('endTitle').textContent = S.submitted ? 'Respostas enviadas.' : 'Revise suas respostas';
+  $('endBold').textContent = S.submitted ? 'Obrigado.' : 'antes de enviar.';
+  $('endSub').textContent = S.submitted ? 'Vamos analisar as informações e retornar com a estimativa no e-mail informado.' : 'Data do preenchimento: ' + new Date().toLocaleDateString('pt-BR') + '.';
+  const sb = $('submitBtn');
+  sb.textContent = '→ ' + (S.submitted ? 'Enviado' : 'Enviar respostas');
+  sb.classList.toggle('filled', S.submitted);
+  sb.disabled = S.submitted;
+  $('summary').innerHTML = vis.map(q => {
+    const same = vis.filter(x => x.group === q.group);
+    const sub = same.length > 1 ? '.' + (same.indexOf(q) + 1) : '';
+    const num = q.group === 'Identificação' ? 'ID' : q.group + sub;
+    return `<div class="sum-row"><span class="n mono">${num}</span><div><span class="q">${esc(q.label)}</span><span class="a">${esc(answerText(q))}</span></div><button class="link-btn mono" data-edit="${q.id}">Editar</button></div>`;
+  }).join('');
+}
+
+function render() {
+  const vis = visible(), ci = curIndex();
+  QUESTIONS.forEach(q => {
+    const v = vis.indexOf(q);
+    slideStyle(els[q.id].sec, v < 0 ? 1 : v - ci);
+    updateQuestion(q);
+  });
+  slideStyle(els._end, vis.length - ci);
+  renderEnd();
+  const p = $('pausedSlide');
+  p.style.opacity = S.paused ? 1 : 0;
+  p.style.visibility = S.paused ? 'visible' : 'hidden';
+  $('pausedCount').textContent = vis.filter(isAnswered).length + ' de ' + vis.length;
+  $('resumeLink').textContent = resumeLink();
+  $('copyBtn').textContent = S.copied ? 'Copiado' : 'Copiar link';
+  updateChrome();
+}
+
+/* ===== Eventos ===== */
+function wire() {
+  $('prevBtn').addEventListener('click', prev);
+  $('nextBtn').addEventListener('click', next);
+  $('pauseBtn').addEventListener('click', () => { S.paused = true; S.copied = false; render(); });
+  $('resumeBtn').addEventListener('click', () => { S.paused = false; render(); focusCurrent(); });
+  $('copyBtn').addEventListener('click', () => {
+    try { navigator.clipboard.writeText(resumeLink()); } catch (e) {}
+    S.copied = true; render();
+  });
+  $('summary').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-edit]');
+    if (!b) return;
+    S.atEnd = false; S.curId = b.dataset.edit;
+    saveLocal(); render(); focusCurrent();
+  });
+  $('submitBtn').addEventListener('click', () => {
+    clearTimeout(sendTimer);
+    S.submitted = true;
+    $('sendErr').hidden = true;
+    send().then(() => {
+      S.savedAt = Date.now(); saveLocal(); render();
+    }).catch(() => {
+      S.submitted = false; $('sendErr').hidden = false; render();
+    });
+    render();
+  });
+  $('restartBtn').addEventListener('click', () => {
+    try { localStorage.removeItem(STORE); } catch (e) {}
+    S = { curId: QUESTIONS[0].id, atEnd: false, answers: {}, submitted: false, paused: false, savedAt: null, sid: uid(), copied: false };
+    fillInputs(); render(); focusCurrent();
+  });
+  window.addEventListener('keydown', ev => {
+    if (S.paused || S.atEnd) return;
+    const tag = (ev.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'button') return;
+    const q = QUESTIONS.find(x => x.id === S.curId);
+    if (ev.key === 'Enter') { ev.preventDefault(); next(); return; }
+    if (!q || !q.options) return;
+    const k = KEYS.indexOf(ev.key.toUpperCase());
+    if (k >= 0 && k < q.options.length) pick(q, q.options[k]);
+  });
+}
+
+/* ===== Início ===== */
+build();
+const restored = load();
+fillInputs();
+wire();
+render();
+focusCurrent();
+if (restored) {
+  $('toast').style.opacity = 1;
+  setTimeout(() => { $('toast').style.opacity = 0; }, 3500);
+}
+</script>
+</body>
+</html>
