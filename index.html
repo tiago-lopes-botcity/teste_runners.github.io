@@ -96,7 +96,7 @@
 
   .toast { position: absolute; left: 50%; bottom: 32px; transform: translateX(-50%); padding: 10px 16px; border-radius: 6px; background: #000014; color: #ffffff; font-size: 12px; letter-spacing: .04em; opacity: 0; transition: opacity .3s ease-out; pointer-events: none; white-space: nowrap; }
   .nav { position: absolute; right: clamp(20px, 5vw, 56px); bottom: 24px; display: flex; gap: 8px; }
-  .nav button { width: 44px; height: 44px; border-radius: 6px; border: 1px solid #c7ccd6; background: #ffffff; color: #000014; font-size: 18px; cursor: pointer; }
+  .nav button { width: 44px; height: 44px; border-radius: 6px; border: 1px solid #b3d2ff; background: #dbeaff; color: #00178c; font-size: 18px; font-weight: 600; cursor: pointer; }
   .nav button:hover:not(:disabled) { border-color: #003cf0; color: #003cf0; }
   .nav button:disabled { opacity: .4; cursor: default; }
 </style>
@@ -138,7 +138,7 @@
         <div class="head">
           <div class="eyebrow mono">Progresso salvo</div>
           <h1 style="font-size:clamp(28px,4vw,44px);line-height:1.1;">Você pode parar agora e <strong>continuar depois.</strong></h1>
-          <p class="help" style="max-width:600px;">Suas respostas até aqui (<span id="pausedCount"></span>) estão salvas neste navegador. Ao voltar, o formulário abre na pergunta em que você parou. Guarde o link abaixo para retomar.</p>
+          <p class="help" style="max-width:600px;">Suas respostas até aqui (<span id="pausedCount"></span>) estão salvas. Neste navegador, o formulário abre na pergunta em que você parou. Para continuar em outro computador ou navegador, use o link abaixo.</p>
         </div>
         <div class="link-box">
           <div class="mono" id="resumeLink"></div>
@@ -171,25 +171,28 @@ const QUESTIONS = [
   { id: 'responsavel', group: 'Identificação', type: 'text', label: 'Quem é o responsável pelo preenchimento?', help: 'Quem conhece a operação das automações e pode tirar dúvidas depois.', example: 'Maria Souza' },
   { id: 'cargo', group: 'Identificação', type: 'text', label: 'Qual é o seu cargo e área?', help: 'Ajuda a direcionar perguntas técnicas ou de negócio.', example: 'Coordenadora de Automação, TI' },
   { id: 'email', group: 'Identificação', type: 'email', label: 'Qual é o seu e-mail?', help: 'Contato para retorno da estimativa.', example: 'maria.souza@exemplo.com.br' },
-  { id: 'q1_producao', group: '01', type: 'number', max: 300, unit: 'em produção', label: 'Quantas automações estão ativas hoje?', help: 'Conte apenas as que rodam em produção hoje.' },
-  { id: 'q1_desenv', group: '01', type: 'number', max: 100, unit: 'previstas', label: 'E quantas estão em desenvolvimento ou previstas para os próximos meses?', help: 'Informe à parte das que já estão em produção.' },
-  { id: 'q2_maquinas', group: '02', type: 'number', max: 200, unit: 'máquinas', label: 'Quantas máquinas (VMs ou físicas) executam essas automações atualmente?', help: 'Some todas as máquinas usadas só para executar automações. Não inclua máquinas de desenvolvimento ou testes.' },
-  { id: 'q3_ferramentas', group: '03', type: 'multi', exclusive: [NAO_RPA], label: 'Já existe alguma ferramenta de RPA em uso que será migrada?', help: 'Selecione todas as ferramentas em uso. Se as automações forem scripts Python agendados, sem ferramenta, escolha a última opção.', options: ['UiPath', 'Automation Anywhere', 'Blue Prism', 'Power Automate Desktop', 'Outra ferramenta', NAO_RPA] },
-  { id: 'q3_licencas', group: '03', type: 'textarea', showIf: a => (a.q3_ferramentas || []).some(x => x !== NAO_RPA), label: 'Quantos executores ou licenças de cada ferramenta estão contratados?', help: 'Informe a ferramenta e a quantidade contratada de cada tipo de licença de execução.', example: 'UiPath com 25 robôs Unattended e Power Automate Desktop com 5 licenças de fluxo desassistido.' },
-  { id: 'q4_simultaneos', group: '04', type: 'number', max: 100, unit: 'execuções simultâneas', label: 'No momento de maior demanda, quantos processos precisam rodar ao mesmo tempo?', help: 'Pense no horário mais cheio do dia e some tudo o que roda junto, incluindo automações diferentes e cópias da mesma automação.' },
-  { id: 'q4_pico', group: '04', type: 'text', optional: true, label: 'Em que horário acontece esse pico?', help: 'Se souber o horário do pico, informe.', example: 'Entre 9h e 12h.' },
-  { id: 'q5_instancias', group: '05', type: 'single', options: ['Sim', 'Não'], label: 'Alguma automação precisa rodar em várias instâncias simultâneas por causa do volume?', help: 'Considere só as automações em que a mesma rotina roda em várias máquinas ao mesmo tempo, cada cópia processando parte dos itens.' },
-  { id: 'q5_detalhe', group: '05', type: 'textarea', showIf: a => a.q5_instancias === 'Sim', label: 'Quais automações, quantas instâncias de cada e quando?', help: 'Para cada uma, informe quantas cópias rodam ao mesmo tempo e em que período.', example: 'Contratação de crédito: 8 instâncias durante o horário comercial. Conciliação bancária: 3 instâncias nos 3 últimos dias do mês.' },
-  { id: 'q6_formato', group: '06', type: 'single', options: ['Horário comercial', '24 horas', 'Misto'], label: 'As automações rodam majoritariamente em horário comercial, 24h ou em formato misto?' },
-  { id: 'q6_restritas', group: '06', type: 'number', max: 300, unit: 'restritas', showIf: a => a.q6_formato && a.q6_formato !== '24 horas', label: 'Quantas são obrigatoriamente restritas ao horário comercial?', help: '“Restrita” significa que não pode rodar fora do horário, por exemplo porque o sistema ou portal fica indisponível. Automações que rodam de dia só por costume não são restritas.' },
-  { id: 'q6_janela', group: '06', type: 'text', showIf: a => a.q6_formato && a.q6_formato !== '24 horas', label: 'Qual é a janela exata desse horário?', help: 'Informe início e fim do período em que os sistemas ficam disponíveis.', example: '8h às 18h' },
-  { id: 'q7_tela', group: '07', type: 'number', max: 300, unit: 'em tela', label: 'Aproximadamente quantos processos são exclusivamente em tela?', help: '“Em tela” exige uma sessão gráfica ativa, com mouse, teclado ou leitura de imagem. Uma estimativa aproximada já ajuda.' },
-  { id: 'q7_background', group: '07', type: 'number', max: 300, unit: 'em background', label: 'E quantos podem rodar em background?', help: '“Background” roda sem interface visível, como APIs, arquivos ou navegador headless.' },
-  { id: 'q8_ambiente', group: '08', type: 'multi', exclusive: [NAO_DEF], options: ['VMs', 'Docker', 'Kubernetes', NAO_DEF], label: 'Onde os runners serão executados?', help: 'Selecione o ambiente previsto.' },
-  { id: 'q8_config', group: '08', type: 'textarea', optional: true, label: 'Qual é a configuração dessas máquinas?', help: 'Se souber, informe sistema, local e recursos. Isso indica se é possível rodar mais de um runner por máquina.', example: 'VMs Windows on-premise (VMware), 4 vCPU e 8 GB de RAM cada.' }
+  { id: 'q0_legado', group: '01', type: 'single', options: ['Sim', 'Não', 'Não sei / Não tenho certeza'], label: 'As automações interagem com algum sistema legado?', help: 'Sistemas antigos, geralmente sem API, acessados por tela ou terminal. Exemplos: mainframe IBM (terminal 3270, COBOL, CICS), IBM i / AS/400 (terminal 5250), SAP R/3 ou ECC via SAP GUI, TOTVS Protheus, RM ou Datasul, Oracle E-Business Suite, sistemas em Delphi ou Visual Basic 6 e aplicações publicadas via Citrix.' },
+  { id: 'q0_legado_quais', group: '01', type: 'textarea', showIf: a => a.q0_legado === 'Sim', label: 'Qual ou quais sistemas legados?', help: 'Informe o nome de cada sistema e, se souber, como ele é acessado (terminal, aplicação desktop, Citrix etc.).', example: 'Mainframe IBM via emulador 3270 e TOTVS Protheus pelo SmartClient.' },
+  { id: 'q1_producao', group: '02', type: 'number', max: 300, unit: 'em produção', label: 'Quantas automações estão ativas hoje?', help: 'Conte apenas as que rodam em produção hoje.' },
+  { id: 'q1_desenv', group: '02', type: 'number', max: 100, unit: 'previstas', label: 'E quantas estão em desenvolvimento ou previstas para os próximos meses?', help: 'Informe à parte das que já estão em produção.' },
+  { id: 'q2_maquinas', group: '03', type: 'number', max: 200, unit: 'máquinas', label: 'Quantas máquinas (VMs ou físicas) executam essas automações atualmente?', help: 'Some todas as máquinas usadas só para executar automações. Não inclua máquinas de desenvolvimento ou testes.' },
+  { id: 'q3_ferramentas', group: '04', type: 'multi', exclusive: [NAO_RPA], label: 'Já existe alguma ferramenta de RPA em uso que será migrada?', help: 'Selecione todas as ferramentas em uso. Se as automações forem scripts Python agendados, sem ferramenta, escolha a última opção.', options: ['UiPath', 'Automation Anywhere', 'Blue Prism', 'Power Automate Desktop', 'Outra ferramenta', NAO_RPA] },
+  { id: 'q3_licencas', group: '04', type: 'textarea', showIf: a => (a.q3_ferramentas || []).some(x => x !== NAO_RPA), label: 'Quantos executores ou licenças de cada ferramenta estão contratados?', help: 'Informe a ferramenta e a quantidade contratada de cada tipo de licença de execução.', example: 'UiPath com 25 robôs Unattended e Power Automate Desktop com 5 licenças de fluxo desassistido.' },
+  { id: 'q4_simultaneos', group: '05', type: 'number', max: 100, unit: 'execuções simultâneas', label: 'No momento de maior demanda, quantos processos precisam rodar ao mesmo tempo?', help: 'Pense no horário mais cheio do dia e some tudo o que roda junto, incluindo automações diferentes e cópias da mesma automação.' },
+  { id: 'q4_pico', group: '05', type: 'text', optional: true, label: 'Em que horário acontece esse pico?', help: 'Se souber o horário do pico, informe.', example: 'Entre 9h e 12h.' },
+  { id: 'q5_instancias', group: '06', type: 'single', options: ['Sim', 'Não'], label: 'Alguma automação precisa rodar em várias instâncias simultâneas por causa do volume?', help: 'Considere só as automações em que a mesma rotina roda em várias máquinas ao mesmo tempo, cada cópia processando parte dos itens.' },
+  { id: 'q5_detalhe', group: '06', type: 'textarea', showIf: a => a.q5_instancias === 'Sim', label: 'Quais automações, quantas instâncias de cada e quando?', help: 'Para cada uma, informe quantas cópias rodam ao mesmo tempo e em que período.', example: 'Contratação de crédito: 8 instâncias durante o horário comercial. Conciliação bancária: 3 instâncias nos 3 últimos dias do mês.' },
+  { id: 'q6_formato', group: '07', type: 'single', options: ['Horário comercial', '24 horas', 'Misto'], label: 'As automações rodam majoritariamente em horário comercial, 24h ou em formato misto?' },
+  { id: 'q6_restritas', group: '07', type: 'number', max: 300, unit: 'restritas', showIf: a => a.q6_formato && a.q6_formato !== '24 horas', label: 'Quantas são obrigatoriamente restritas ao horário comercial?', help: '“Restrita” significa que não pode rodar fora do horário, por exemplo porque o sistema ou portal fica indisponível. Automações que rodam de dia só por costume não são restritas.' },
+  { id: 'q6_janela', group: '07', type: 'text', showIf: a => a.q6_formato && a.q6_formato !== '24 horas', label: 'Qual é a janela exata desse horário?', help: 'Informe início e fim do período em que os sistemas ficam disponíveis.', example: '8h às 18h' },
+  { id: 'q7_tela', group: '08', type: 'number', max: 300, unit: 'em tela', label: 'Aproximadamente quantos processos são exclusivamente em tela?', help: '“Em tela” exige uma sessão gráfica ativa, com mouse, teclado ou leitura de imagem. Uma estimativa aproximada já ajuda.' },
+  { id: 'q7_background', group: '08', type: 'number', max: 300, unit: 'em background', label: 'E quantos podem rodar em background?', help: '“Background” roda sem interface visível, como APIs, arquivos ou navegador headless.' },
+  { id: 'q8_ambiente', group: '09', type: 'multi', exclusive: [NAO_DEF], options: ['VMs', 'Docker', 'Kubernetes', NAO_DEF], label: 'Onde os runners serão executados?', help: 'Selecione o ambiente previsto.' },
+  { id: 'q8_config', group: '09', type: 'textarea', optional: true, label: 'Qual é a configuração dessas máquinas?', help: 'Se souber, informe sistema, local e recursos. Isso indica se é possível rodar mais de um runner por máquina.', example: 'VMs Windows on-premise (VMware), 4 vCPU e 8 GB de RAM cada.' }
 ];
 
-/* Nomes das colunas na planilha (iguais aos da versão anterior) */
+/* Nomes das colunas na planilha. O Apps Script reconhece uma coluna existente
+   pelo texto após o " – ", então renumerar os grupos não duplica colunas. */
 const ID_LABELS = { empresa: 'Empresa', responsavel: 'Responsável pelo preenchimento', cargo: 'Cargo / área', email: 'E-mail' };
 const COL_LABEL = {};
 QUESTIONS.forEach(q => {
@@ -203,7 +206,11 @@ const KEYS = 'ABCDEFGHIJ';
 const STORE = 'botcity-formulario-runners';
 const pad = n => String(n).padStart(2, '0');
 const hhmm = t => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+/* O ID vai no link de retomada e dá acesso às respostas, então precisa ser imprevisível. */
+const uid = () => {
+  try { return [...crypto.getRandomValues(new Uint8Array(12))].map(b => b.toString(36).padStart(2, '0')).join(''); }
+  catch (e) { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const HORIZ = DIRECTION === 'horizontal';
@@ -234,6 +241,32 @@ function payload() {
     cols[COL_LABEL[q.id]] = v === undefined ? '' : (Array.isArray(v) ? v.join(', ') : v);
   });
   return JSON.stringify({ sessionId: S.sid, status: S.submitted ? 'enviado' : 'parcial', answers: cols });
+}
+
+/* Busca no Apps Script as respostas da sessão do link "?retomar=" e converte
+   os valores da planilha (texto) de volta para o formato de cada pergunta. */
+function loadRemote(sid) {
+  return fetch(WEBHOOK_URL + '?retomar=' + encodeURIComponent(sid)).then(r => r.json()).then(d => {
+    if (!d || !d.answers) return false;
+    const texto = h => String(h).replace(/^[^–]*–\s*/, '');
+    const answers = {};
+    QUESTIONS.forEach(q => {
+      const lbl = COL_LABEL[q.id];
+      const col = lbl in d.answers ? lbl : Object.keys(d.answers).find(h => texto(h) === texto(lbl));
+      const v = String(d.answers[col] ?? '').trim();
+      if (!v) return;
+      if (q.type === 'number') answers[q.id] = Number(v.replace(/\D/g, ''));
+      else if (q.type === 'multi') { const o = q.options.filter(o => (', ' + v + ', ').includes(', ' + o + ', ')); if (o.length) answers[q.id] = o; }
+      else if (q.type === 'single') { if (q.options.includes(v)) answers[q.id] = v; }
+      else answers[q.id] = v;
+    });
+    Object.assign(S, { sid, answers, submitted: d.status === 'enviado', savedAt: Date.now() });
+    const pend = visible().find(q => !canGo(q));
+    S.atEnd = !pend;
+    if (pend) S.curId = pend.id;
+    saveLocal();
+    return true;
+  });
 }
 
 /* Envia para o Apps Script. 'no-cors' + text/plain evita preflight;
@@ -545,9 +578,27 @@ fillInputs();
 wire();
 render();
 focusCurrent();
-if (restored) {
+let toastTimer;
+function toast(msg, ms = 3500) {
+  $('toast').textContent = msg;
   $('toast').style.opacity = 1;
-  setTimeout(() => { $('toast').style.opacity = 0; }, 3500);
+  clearTimeout(toastTimer);
+  if (ms) toastTimer = setTimeout(() => { $('toast').style.opacity = 0; }, ms);
+}
+/* Link "?retomar=" de outra sessão: busca as respostas na planilha.
+   Se a sessão do link já é a deste navegador, os dados locais bastam. */
+const retomar = new URLSearchParams(location.search).get('retomar');
+if (retomar && retomar !== S.sid) {
+  toast('Carregando suas respostas…', 0);
+  loadRemote(retomar)
+    .then(ok => {
+      if (!ok) return toast('Não encontramos respostas para este link');
+      fillInputs(); render(); focusCurrent();
+      toast('Retomando de onde você parou');
+    })
+    .catch(() => toast('Não foi possível carregar as respostas deste link'));
+} else if (restored) {
+  toast('Retomando de onde você parou');
 }
 </script>
 </body>
